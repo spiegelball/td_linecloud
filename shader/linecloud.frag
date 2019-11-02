@@ -7,7 +7,6 @@ in Vertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
 	float width;
-	vec3 faceNorm;
 } iVert;
 
 out vec4 fragColor;
@@ -94,7 +93,6 @@ void main()
     color.a = alpha;
     
     vec3 camSpacePos = (uTDMat.cam * vec4(iVert.worldSpacePos, 1.0)).xyz;
-    vec3 camSpaceNorm = uTDMat.camForNormals * iVert.faceNorm;
     vec3 viewVec = normalize(uTDMat.camInverse[3].xyz - iVert.worldSpacePos );
 	
     

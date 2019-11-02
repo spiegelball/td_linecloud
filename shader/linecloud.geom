@@ -23,7 +23,6 @@ out Vertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
 	float width;
-	vec3 faceNorm;
 } oVert;
 
 struct SVertex
@@ -31,7 +30,6 @@ struct SVertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
 	float width;
-	vec3 faceNorm;
 } vBuffer[3];
 
 vec2 mapIdxToTexCoord(int idx, int res)
@@ -142,9 +140,6 @@ void drawRect(int idx0, int idx1) {
 	
 	vec3 diffVec = p1 - p0;
 	
-	vec3 faceNorm = cross(screenNorm, diffVec);
-	faceNorm = normalize(faceNorm);
-	
 	float d0 = getDOFFac(p0);
 	float d1 = getDOFFac(p1);
 	
@@ -174,15 +169,15 @@ void drawRect(int idx0, int idx1) {
 		normals = vec3[2](pB-pA, p1-p0);
 		coords = vec3[4](pA, pB, pC, pD);
 		
-		vBuffer[0] = SVertex(pA, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pB, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pC, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pA, coords, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pD, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pB, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pC, coords, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, screenWidth);
 			
 		drawTriangle();
 		
@@ -192,15 +187,15 @@ void drawRect(int idx0, int idx1) {
 		coords = vec3[4](pA, pB, pE, pF);
 		lengths = float[3](length(p0-pM), length(pB-pA), length(pF-pE));
 		
-		vBuffer[0] = SVertex(pA, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pB, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pE, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pA, coords, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, screenWidth);
+		vBuffer[2] = SVertex(pE, coords, screenWidth);
 			
 		drawTriangle();
 		
-		vBuffer[0] = SVertex(pE, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pF, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pB, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pE, coords, screenWidth);
+		vBuffer[1] = SVertex(pF, coords, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, screenWidth);
 			
 		drawTriangle();
 		
@@ -215,15 +210,15 @@ void drawRect(int idx0, int idx1) {
 		normals = vec3[2](pB-pA, p1-p0);
 		coords = vec3[4](pA, pB, pC, pD);
 				
-		vBuffer[0] = SVertex(pA, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pB, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pC, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pA, coords, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, screenWidth, faceNorm);
-		vBuffer[1] = SVertex(pD, coords, screenWidth, faceNorm);
-		vBuffer[2] = SVertex(pB, coords, screenWidth, faceNorm);
+		vBuffer[0] = SVertex(pC, coords, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, screenWidth);
 			
 		drawTriangle();
 	}
