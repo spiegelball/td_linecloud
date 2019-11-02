@@ -171,15 +171,11 @@ float getDOFFac(vec3 p0) {
 //    pA                                              ------X      
 //                                                         pD      
 //                      focus                                    
-void drawRect(int idx0, int idx1) {
+void drawRect(vec3 p0, vec3 p1) {
 	
 	float focalLength = uWidths.x;
 	float screenWidth = uWidths.y;
-	    
-    // get point positions from index
-	vec3 p0 = posFromIndex(idx0).xyz;
-	vec3 p1 = posFromIndex(idx1).xyz;
-			
+
 	vec3 widthVec = calcScreenLineOrthonormal(p0, p1);
 	vec3 diffVec = p1 - p0;
 	
@@ -273,10 +269,14 @@ void main()
 	int edgeBlockSize = int(ceil(nConnections / 4.0));
 
 	int idx = gl_PrimitiveIDIn;
-		
+
 	vec2 INIT = vec2(float(MAXINT), float(MAXINT));
 	vec2 closest[MAXCONNECTIONS] = {INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT};
 	
+    // get point positions from index
+	vec3 posSource = posFromIndex(idx).xyz;
+    vec3 posTarget = vec3(0.0);
+
 	// for all possible connection
 	for (int i = 0; i < nConnections; i++) {
 		int block = int(floor(float(i) / 4.0));
@@ -288,8 +288,10 @@ void main()
 		if (target == MAXINT)
 			break;
 		
-		if (idx < target || !existsEdge(target, idx, nConnections, edgeBlockSize))
-			drawRect(idx, target);
+		if (idx < target || !existsEdge(target, idx, nConnections, edgeBlockSize)) {
+            posTarget = posFromIndex(target).xyz;
+			drawRect(posSource, posTarget);
+        }
 	}
 	
 }
