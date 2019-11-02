@@ -67,6 +67,10 @@ vec4 posFromIndex(int idx)
 	return texture(pointBuffer, samplePos);
 }
 
+// read neighbours index from connection buffer for index idx. 
+// Remember mapping. One pixel stores up to 4 neighbour ids:
+//     r0           g0          b0           a0            r1           g1          b1         ...
+// neighbour 0, neighbour 1, neighbour 2, neighbour 3, neighbour 4, neighbour 5, neighbour 6,  ...
 int idFromIndex(int idx, int channel)
 {
 	int resConnectionBuffer = textureSize(connectionBuffer, 0)[0];
@@ -74,6 +78,7 @@ int idFromIndex(int idx, int channel)
 	return int(texture(connectionBuffer, samplePos)[channel]);
 }
 
+// checks if there is a connection from point with idx source to point with idx target
 bool existsEdge(int source, int target, int nConnections, int edgeBlockSize) {
 	for (int i = 0; i < nConnections; i++) {
 		int block = int(floor(float(i) / 4.0));
@@ -87,6 +92,7 @@ bool existsEdge(int source, int target, int nConnections, int edgeBlockSize) {
 	return false;
 }
 
+// maps coordinate from camera to projection space
 vec4 camToProjSpace(vec4 camPos)
 {
 	vec4 proj = uTDMat.proj * camPos;
@@ -102,6 +108,7 @@ vec4 camToProjSpace(vec4 camPos)
 	return vec4(proj.x, proj.y, proj.z, proj.w);
 }
 
+// maps coordinate from world to camera space
 vec4 worldToProjSpace(vec4 worldPos)
 {
 	vec4 camSpacePos = uTDMat.cam * worldPos;
@@ -109,6 +116,7 @@ vec4 worldToProjSpace(vec4 worldPos)
 	return camToProjSpace(camSpacePos);
 }
 
+// draws triangle from points in vBuffer
 void drawTriangle() {
 	
 	for (int i = 0; i < 3; i++) {
@@ -122,7 +130,8 @@ void drawTriangle() {
 	EndPrimitive();
 }
 
-vec3 calcScreenNormal(vec3 p0, vec3 p1) {	
+// calculates orthonormal vector of vector p0 -> p1 and view vector. This is used to give the connection lines actual "width".
+vec3 calcScreenLineOrthonormal(vec3 p0, vec3 p1) {	
 	vec3 camPos = uTDMat.camInverse[3].xyz;
 	vec3 diffP = p1 - p0;
 	vec3 diffCam = camPos - p0;
@@ -132,9 +141,11 @@ vec3 calcScreenNormal(vec3 p0, vec3 p1) {
 	return norm;
 }
 
+// calculate how "out of focus" point p0 is. Returns 0 if perfect in focus, 1 if at maximum blur distance.
 float getDOFFac(vec3 p0) {
 	vec3 focusPoint = vec3(uFocus.x, uFocus.y, uFocus.z);
-
+    
+    //map focus and p0 to camera space
 	vec3 p0Cam = (uTDMat.cam * vec4(p0, 1.0)).xyz;
 	vec3 focusCam = (uTDMat.cam * vec4(focusPoint, 1.0)).xyz;
 	
@@ -153,7 +164,7 @@ void drawRect(int idx0, int idx1) {
 	vec3 p0 = posFromIndex(idx0).xyz;
 	vec3 p1 = posFromIndex(idx1).xyz;
 			
-	vec3 screenNorm = calcScreenNormal(p0, p1);
+	vec3 screenNorm = calcScreenLineOrthonormal(p0, p1);
 	
 	vec3 diffVec = p1 - p0;
 	
