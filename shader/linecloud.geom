@@ -13,7 +13,7 @@ layout (triangle_strip, max_vertices = 48) out;
 uniform vec4 uData;
 // x: minimum distance, y: maximum distance
 uniform vec4 uLimits;
-// x: focal length, y: width of drawm connections
+// x: focal length, y: width of drawn connections
 uniform vec4 uWidths;
 //focus point
 uniform vec3 uFocus;
@@ -154,26 +154,41 @@ float getDOFFac(vec3 p0) {
 	
 	return clamp(d, 0, l) / l;
 } 
-
+// Draw rectangle stripe for point p0 and p1. pA-bF are helper points. Only calculate pM, pE and pF if 
+// focus point "cuts" line somewhere between p0 and p1.
+//
+//                                                         pC      
+//   pB                                               ------X      ^
+//     X----\             pE                ---------/      |      |
+//     |     --------\            ---------/                |      |
+//     |              -----X-----/                          |      |
+//     |                   |pM                              |      |
+// p0  X-------------------X--------------------------------X p1   X widthVec
+//     |                   |                                |      
+//     |              -----X-----\                          |      
+//     |     --------/    pF      ---------\                |      
+//     X----/                               ---------\      |      
+//    pA                                              ------X      
+//                                                         pD      
+//                      focus                                    
 void drawRect(int idx0, int idx1) {
 	
-	float focus = uWidths.x;
+	float focalLength = uWidths.x;
 	float screenWidth = uWidths.y;
-	//aspectRatio
-    
+	    
+    // get point positions from index
 	vec3 p0 = posFromIndex(idx0).xyz;
 	vec3 p1 = posFromIndex(idx1).xyz;
 			
-	vec3 screenNorm = calcScreenLineOrthonormal(p0, p1);
-	
+	vec3 widthVec = calcScreenLineOrthonormal(p0, p1);
 	vec3 diffVec = p1 - p0;
 	
 	float d0 = getDOFFac(p0);
 	float d1 = getDOFFac(p1);
 	
 	//above values, multiplied with focus width
-	float D0 = d0 * focus; 
-	float D1 = d1 * focus;
+	float D0 = d0 * focalLength; 
+	float D1 = d1 * focalLength;
 	
 	vec3 pA, pB, pC, pD, pE, pF;
 	vec3 coords[4];
@@ -188,10 +203,10 @@ void drawRect(int idx0, int idx1) {
 	if (0.0 < fac && fac < 1.0) {
 		vec3 pM = mix(p0, p1, fac);
 		
-		pA = pM + screenNorm * (screenWidth);
-		pB = pM - screenNorm * (screenWidth);
-		pC = p1 + screenNorm * (screenWidth + D1);
-		pD = p1 - screenNorm * (screenWidth + D1);
+		pA = pM + widthVec * (screenWidth);
+		pB = pM - widthVec * (screenWidth);
+		pC = p1 + widthVec * (screenWidth + D1);
+		pD = p1 - widthVec * (screenWidth + D1);
 		
 		float lengths[3] = float[3](length(p1-pM), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
@@ -208,8 +223,8 @@ void drawRect(int idx0, int idx1) {
 			
 		drawTriangle();
 		
-		pE = p0 + screenNorm * (screenWidth + D0);
-		pF = p0 - screenNorm * (screenWidth + D0);
+		pE = p0 + widthVec * (screenWidth + D0);
+		pF = p0 - widthVec * (screenWidth + D0);
 		
 		coords = vec3[4](pA, pB, pE, pF);
 		lengths = float[3](length(p0-pM), length(pB-pA), length(pF-pE));
@@ -228,10 +243,10 @@ void drawRect(int idx0, int idx1) {
 		
 	}
 	else {	
-		pA = p0 + screenNorm * (screenWidth + D0);
-		pB = p0 - screenNorm * (screenWidth + D0);
-		pC = p1 + screenNorm * (screenWidth + D1);
-		pD = p1 - screenNorm * (screenWidth + D1);
+		pA = p0 + widthVec * (screenWidth + D0);
+		pB = p0 - widthVec * (screenWidth + D0);
+		pC = p1 + widthVec * (screenWidth + D1);
+		pD = p1 - widthVec * (screenWidth + D1);
 			
 		float lengths[3] = float[3](length(diffVec), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
