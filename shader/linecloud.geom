@@ -15,7 +15,7 @@ uniform vec4 uLimits;
 uniform vec4 uWidths;
 uniform vec3 uFocus;
 
-uniform sampler2D sPosBuffer;
+uniform sampler2D pointBuffer;
 uniform sampler2D sEdgeBuffer;
 
 out Vertex
@@ -34,7 +34,7 @@ struct SVertex
 	vec3 faceNorm;
 } vBuffer[3];
 
-vec2 getTexPos(int idx, int offset, int res)
+vec2 mapIdxToTexCoord(int idx, int offset, int res)
 {
 	idx += offset;
 
@@ -49,15 +49,15 @@ vec2 getTexPos(int idx, int offset, int res)
 
 vec4 posFromIndex(int idx)
 {
-	int resPosBuffer = textureSize(sPosBuffer, 0)[0];
-	vec2 samplePos = getTexPos(idx, 0, resPosBuffer);
-	return texture(sPosBuffer, samplePos);
+	int resPosBuffer = textureSize(pointBuffer, 0)[0];
+	vec2 samplePos = mapIdxToTexCoord(idx, 0, resPosBuffer);
+	return texture(pointBuffer, samplePos);
 }
 
 int idFromIndex(int idx, int channel)
 {
 	int resEdgeBuffer = textureSize(sEdgeBuffer, 0)[0];
-	vec2 samplePos = getTexPos(idx, 0, resEdgeBuffer);
+	vec2 samplePos = mapIdxToTexCoord(idx, 0, resEdgeBuffer);
 	return int(texture(sEdgeBuffer, samplePos)[channel]);
 }
 

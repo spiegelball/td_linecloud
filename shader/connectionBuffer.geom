@@ -28,7 +28,7 @@ out vec4 vFragColor;
 // norm: map to -1..1 range if true, 0..1 otherwise
 // 
 // return coords
-vec2 getTexPos(int idx, int res, bool norm)
+vec2 mapIdxToTexCoord(int idx, int res, bool norm)
 {
 	float xPixel = mod(idx,res); 
 	float yPixel = floor(float(idx)/float(res));
@@ -56,7 +56,7 @@ vec4 posFromIndex(int idx)
 {
 	int resPosBuffer = textureSize(pointBuffer, 0)[0];
     // get coordinates associated with index in point buffer
-	vec2 samplePos = getTexPos(idx, resPosBuffer, false);
+	vec2 samplePos = mapIdxToTexCoord(idx, resPosBuffer, false);
     //return pixel value for those coordinates (position of the point) rgb -> xyz
 	return texture(pointBuffer, samplePos);
 }
@@ -158,7 +158,7 @@ void main()
 		}
 		
 		// position of point to emit in connection buffer		
-		vec2 screenPos = getTexPos(idx*nConnectionBlocks+i, resOut, true);
+		vec2 screenPos = mapIdxToTexCoord(idx*nConnectionBlocks+i, resOut, true);
 		gl_Position = vec4(screenPos.x, screenPos.y,0.0,1.0);
         // set color
 		vFragColor = vec4(color);

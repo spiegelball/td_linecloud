@@ -23,7 +23,7 @@ out vec4 vFragColor;
 // res: resolution of the image
 // 
 // return coords in -1..1 range
-vec2 getPos(int idx, int res)
+vec2 mapIdxToTexCoord(int idx, int res)
 {
 	float xPixel = mod(idx,res)+1; 
 	float yPixel = floor(float(idx)/float(res))+1;
@@ -45,7 +45,7 @@ void main()
 	int res = int(uData.x);
     
     //calculate position of vertex in output buffer
-	vec2 screenPos = getPos(idx, res);
+	vec2 screenPos = mapIdxToTexCoord(idx, res);
     //get vertex position
 	vec4 p = gl_in[0].gl_Position;
 	
