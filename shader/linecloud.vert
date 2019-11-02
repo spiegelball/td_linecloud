@@ -1,9 +1,6 @@
-// Example Vertex Shader
-
 void main() 
 {	
-
-	gl_Position = TDDeform(P);
+	gl_Position = vec4(1.0);
 }
 
 
