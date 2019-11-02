@@ -34,10 +34,8 @@ struct SVertex
 	vec3 faceNorm;
 } vBuffer[3];
 
-vec2 mapIdxToTexCoord(int idx, int offset, int res)
+vec2 mapIdxToTexCoord(int idx, int res)
 {
-	idx += offset;
-
 	float xPixel = mod(idx,res); 
 	float yPixel = floor(float(idx)/float(res));
 	
@@ -50,14 +48,14 @@ vec2 mapIdxToTexCoord(int idx, int offset, int res)
 vec4 posFromIndex(int idx)
 {
 	int resPosBuffer = textureSize(pointBuffer, 0)[0];
-	vec2 samplePos = mapIdxToTexCoord(idx, 0, resPosBuffer);
+	vec2 samplePos = mapIdxToTexCoord(idx, resPosBuffer);
 	return texture(pointBuffer, samplePos);
 }
 
 int idFromIndex(int idx, int channel)
 {
 	int resEdgeBuffer = textureSize(sEdgeBuffer, 0)[0];
-	vec2 samplePos = mapIdxToTexCoord(idx, 0, resEdgeBuffer);
+	vec2 samplePos = mapIdxToTexCoord(idx, resEdgeBuffer);
 	return int(texture(sEdgeBuffer, samplePos)[channel]);
 }
 
