@@ -1,1 +1,2 @@
-# td_linecloud
+# Linecloud shader for TouchDesigner
+## Inspired by Rowbyte's famous plexus plugin. Documentation under construction...
