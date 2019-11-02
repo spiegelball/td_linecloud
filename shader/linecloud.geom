@@ -6,17 +6,20 @@
 
 layout (points) in;
 
+// emit triangles here
 layout (triangle_strip, max_vertices = 48) out;
 
+// x: number of points, z: number of connections to draw
 uniform vec4 uData;
-uniform vec4 uMaxnormals;
-uniform vec4 uMinnormals;
+// x: minimum distance, y: maximum distance
 uniform vec4 uLimits;
+// x: focal length, y: width of drawm connections
 uniform vec4 uWidths;
+//focus point
 uniform vec3 uFocus;
 
 uniform sampler2D pointBuffer;
-uniform sampler2D sEdgeBuffer;
+uniform sampler2D connectionBuffer;
 
 out Vertex
 {
@@ -25,6 +28,7 @@ out Vertex
 	float width;
 } oVert;
 
+// temporary buffer to hold triangle vertices
 struct SVertex
 {
 	vec3 worldSpacePos;
@@ -32,6 +36,18 @@ struct SVertex
 	float width;
 } vBuffer[3];
 
+// map indices to pixels on a square image.
+//   x
+// y 0  1  2  3  4  5  6  7
+//   8  9 10 11 12 13 14  .
+//   .  .  .  .  .  .  .  .
+//   .  .  .  .  .  .  .  .
+//   etc.
+//
+// idx: index to map
+// res: resolution of the image
+// 
+// return coords in -1..1 range
 vec2 mapIdxToTexCoord(int idx, int res)
 {
 	float xPixel = mod(idx,res); 
@@ -43,6 +59,7 @@ vec2 mapIdxToTexCoord(int idx, int res)
 	return vec2(xPixel, yPixel);
 }
 
+// read point position from point buffer for index idx
 vec4 posFromIndex(int idx)
 {
 	int resPosBuffer = textureSize(pointBuffer, 0)[0];
@@ -52,9 +69,9 @@ vec4 posFromIndex(int idx)
 
 int idFromIndex(int idx, int channel)
 {
-	int resEdgeBuffer = textureSize(sEdgeBuffer, 0)[0];
-	vec2 samplePos = mapIdxToTexCoord(idx, resEdgeBuffer);
-	return int(texture(sEdgeBuffer, samplePos)[channel]);
+	int resConnectionBuffer = textureSize(connectionBuffer, 0)[0];
+	vec2 samplePos = mapIdxToTexCoord(idx, resConnectionBuffer);
+	return int(texture(connectionBuffer, samplePos)[channel]);
 }
 
 bool existsEdge(int source, int target, int nConnections, int edgeBlockSize) {
@@ -166,7 +183,6 @@ void drawRect(int idx0, int idx1) {
 		pD = p1 - screenNorm * (screenWidth + D1);
 		
 		float lengths[3] = float[3](length(p1-pM), length(pB-pA), length(pD-pC));
-		normals = vec3[2](pB-pA, p1-p0);
 		coords = vec3[4](pA, pB, pC, pD);
 		
 		vBuffer[0] = SVertex(pA, coords, screenWidth);
@@ -207,7 +223,6 @@ void drawRect(int idx0, int idx1) {
 		pD = p1 - screenNorm * (screenWidth + D1);
 			
 		float lengths[3] = float[3](length(diffVec), length(pB-pA), length(pD-pC));
-		normals = vec3[2](pB-pA, p1-p0);
 		coords = vec3[4](pA, pB, pC, pD);
 				
 		vBuffer[0] = SVertex(pA, coords, screenWidth);
@@ -228,7 +243,6 @@ void drawRect(int idx0, int idx1) {
 void main()
 {	
 	int nVertices = int(uData.x);
-	int res = int(uData.y);
 	int nConnections = int(uData.z);
 	int edgeBlockSize = int(ceil(nConnections / 4.0));
 
