@@ -11,12 +11,6 @@ uniform vec4 uData;
 
 out vec4 vFragColor;
 
-// encode value to range 0..1
-float encodePosition(float val, float min, float max) {
-	float diff = max - min;
-	return val;
-}
-
 // map indices to pixels on a square image.
 //   x
 // y 0  1  2  3  4  5  6  7
@@ -38,7 +32,6 @@ vec2 getPos(int idx, int res)
 	xPixel = xPixel/float(res);
 	yPixel = yPixel/float(res);
 	
-    
     // map to -1..1 range
 	xPixel = (xPixel*2)-1.0;
 	yPixel = (yPixel*2)-1.0;

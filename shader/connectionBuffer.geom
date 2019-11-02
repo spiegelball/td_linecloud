@@ -1,5 +1,5 @@
 // (c) by Alexander Court / 2019
-// Finds closest neighbours of every vertex (connections) and stores those connections in a pixel buffer.
+// Finds closest neighbours of every point (connections) and stores those connections in a pixel buffer.
 
 #define MAXCONNECTIONS 10
 #define MAXINT 100000
@@ -10,8 +10,8 @@ layout (points, max_vertices = 4) out;
 
 uniform vec4 uData;
 uniform vec4 uSize;
-// buffer containing the vertex positions
-uniform sampler2D sPosBuffer;
+// buffer containing the point positions
+uniform sampler2D pointBuffer;
 
 out vec4 vFragColor;
 
@@ -51,14 +51,14 @@ vec2 getTexPos(int idx, int res, bool norm)
 	return vec2(xPixel, yPixel);
 }
 
-// sample vertex position from vertex buffer
+// sample point position from point buffer
 vec4 posFromIndex(int idx)
 {
-	int resPosBuffer = textureSize(sPosBuffer, 0)[0];
-    // get coordinates associated with index in vertex buffer
+	int resPosBuffer = textureSize(pointBuffer, 0)[0];
+    // get coordinates associated with index in point buffer
 	vec2 samplePos = getTexPos(idx, resPosBuffer, false);
-    //return pixel value for those coordinates (position of the vertex) rgb -> xyz
-	return texture(sPosBuffer, samplePos);
+    //return pixel value for those coordinates (position of the point) rgb -> xyz
+	return texture(pointBuffer, samplePos);
 }
 // shift values in array to the right beginning at index idx. last value of the array is dropped.
 // [a,b,c,d,e] -> [a,a,b,c,d] (for idx=0)
@@ -72,9 +72,9 @@ void shiftFromIndex(int idx, inout vec2[MAXCONNECTIONS] data) {
 	}	
 }
 
-// computes closest neighbours of a vertex and store them in a queue sorted by distance.
+// computes closest neighbours of a point and store them in a queue sorted by distance.
 //
-// idx: index of vertex
+// idx: index of point
 // data: array of form [(idx_0, distance0), (idx_1, distance1), (idx_2, distance2), ...] which stores neighbours
 
 void closestPoints(int idx, inout vec2[MAXCONNECTIONS] data) {
@@ -83,26 +83,26 @@ void closestPoints(int idx, inout vec2[MAXCONNECTIONS] data) {
     //number of neighbours to find
 	int nConnections = int(uData.y);
     
-    // neighbours must lie in this distance range from vertex
+    // neighbours must lie in this distance range from point
 	float minDist = uData.z;
 	float maxDist = uData.w;
 	
-    //position of current vertex
+    //position of current point
 	vec3 currPos = posFromIndex(idx).xyz;
 	
-	// calculate distance to every vertex in the mesh. If distance is lower than distance to an already marked 
+	// calculate distance to every point in the mesh. If distance is lower than distance to an already marked 
     // neighbour make "entry" in list. Discard entries with larger distance in case of full list.
 	for (int i = 0; i < nVertices; i++) {
-		// don't compare vertex to itself
+		// don't compare point to itself
         if (i != idx) {
-            // position of vertex i
+            // position of point i
 			vec3 pos = posFromIndex(i).xyz;
-            // distance of vertex idx to vertex i
+            // distance of point idx to point i
 			float dis = distance(currPos, pos);
             
-            // if vertex is in allowed distance
+            // if point is in allowed distance
             if (minDist <= dis && dis <= maxDist) {
-                // compare distance of current vertex to already found neighbours.
+                // compare distance of current point to already found neighbours.
                 for (int j = 0; j < MAXCONNECTIONS; j++) {
                     // if distance is smaller...
                     if ( dis < data[j].y) {
@@ -127,7 +127,7 @@ void main()
     // dimension of the connection buffer
 	int resOut = int(uSize.x);
 	
-	// how many pixels (connection blocks) are needed to store connection infos for one vertex. One rgba pixel stores // 4 connections since every rgba channel can hold one index.
+	// how many pixels (connection blocks) are needed to store connection infos for one point. One rgba pixel stores // 4 connections since every rgba channel can hold one index.
     // if we store 10 connections, we need 3 pixels, since 3*4 >= 10. 
 	int nConnectionBlocks = int(ceil(float(nConnection) / 4.0));
 	
@@ -139,7 +139,7 @@ void main()
     closestPoints(idx, closest);
 	
     vec4 color;
-    // create and emit all pixels storing neighbours for vertex. 
+    // create and emit all pixels storing neighbours for point. 
 	for (int i = 0; i < nConnectionBlocks; i++)
 	{
 		color = vec4(vec3(0.0),1.0);
@@ -157,7 +157,7 @@ void main()
 			color[int(mod(j, 4))] = float(targetIdx);
 		}
 		
-		// position of vertex to emit in connection buffer		
+		// position of point to emit in connection buffer		
 		vec2 screenPos = getTexPos(idx*nConnectionBlocks+i, resOut, true);
 		gl_Position = vec4(screenPos.x, screenPos.y,0.0,1.0);
         // set color
