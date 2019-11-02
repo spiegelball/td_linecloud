@@ -175,20 +175,21 @@ void drawRect(vec3 p0, vec3 p1) {
 	
 	float focalLength = uWidths.x;
 	float screenWidth = uWidths.y;
-
+    
+    // calculate orthonormal vector of view and p0->p1 difference vector
 	vec3 widthVec = calcScreenLineOrthonormal(p0, p1);
 	vec3 diffVec = p1 - p0;
 	
+    // calculate dof factor for p0 and p1
 	float d0 = getDOFFac(p0);
 	float d1 = getDOFFac(p1);
 	
-	//above values, multiplied with focus width
+	//above values, multiplied with user set focus width
 	float D0 = d0 * focalLength; 
 	float D1 = d1 * focalLength;
 	
 	vec3 pA, pB, pC, pD, pE, pF;
 	vec3 coords[4];
-	vec3 normals[2];
 	
 	vec4 p0Cam = uTDMat.cam*vec4(p0, 1.0);
 	vec4 p1Cam = uTDMat.cam*vec4(p1, 1.0);
