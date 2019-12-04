@@ -5,9 +5,10 @@
 #define MAXINT 100000
 
 layout (points) in;
+in vec3 colorAttr[];
 
 // emit triangles here
-layout (triangle_strip, max_vertices = 48) out;
+layout (triangle_strip, max_vertices = 44) out;
 
 // x: number of points, z: number of connections to draw
 uniform vec4 uData;
@@ -19,12 +20,14 @@ uniform vec4 uWidths;
 uniform vec3 uFocus;
 
 uniform sampler2D pointBuffer;
+uniform sampler2D colBuffer;
 uniform sampler2D connectionBuffer;
 
 out Vertex
 {
 	vec3 worldSpacePos;
 	vec3 coords[4];
+	vec3 color;
 	float width;
 } oVert;
 
@@ -33,6 +36,7 @@ struct SVertex
 {
 	vec3 worldSpacePos;
 	vec3 coords[4];
+    vec3 color;
 	float width;
 } vBuffer[3];
 
@@ -60,11 +64,12 @@ vec2 mapIdxToTexCoord(int idx, int res)
 }
 
 // read point position from point buffer for index idx
-vec4 posFromIndex(int idx)
+vec4 dataFromIndex(sampler2D x, int idx)
 {
-	int resPosBuffer = textureSize(pointBuffer, 0)[0];
-	vec2 samplePos = mapIdxToTexCoord(idx, resPosBuffer);
-	return texture(pointBuffer, samplePos);
+	int resBuffer = textureSize(x, 0)[0];
+	vec2 samplePos = mapIdxToTexCoord(idx, resBuffer);
+
+	return texture(x, samplePos);
 }
 
 // read neighbours index from connection buffer for index idx. 
@@ -122,6 +127,7 @@ void drawTriangle() {
 	for (int i = 0; i < 3; i++) {
 		oVert.worldSpacePos = vBuffer[i].worldSpacePos;
 		oVert.coords = vBuffer[i].coords;
+        oVert.color = vBuffer[i].color;
 		oVert.width = vBuffer[i].width;
 		gl_Position = worldToProjSpace(vec4(vBuffer[i].worldSpacePos, 1.0));
 		EmitVertex();
@@ -171,7 +177,7 @@ float getDOFFac(vec3 p0) {
 //    pA                                              ------X      
 //                                                         pD      
 //                      focus                                    
-void drawRect(vec3 p0, vec3 p1) {
+void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 	
 	float focalLength = uWidths.x;
 	float screenWidth = uWidths.y;
@@ -199,6 +205,7 @@ void drawRect(vec3 p0, vec3 p1) {
 	
 	if (0.0 < fac && fac < 1.0) {
 		vec3 pM = mix(p0, p1, fac);
+        vec3 colorM = mix(color0, color1, fac);
 		
 		pA = pM + widthVec * (screenWidth);
 		pB = pM - widthVec * (screenWidth);
@@ -208,15 +215,15 @@ void drawRect(vec3 p0, vec3 p1) {
 		float lengths[3] = float[3](length(p1-pM), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
 		
-		vBuffer[0] = SVertex(pA, coords, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, screenWidth);
-		vBuffer[2] = SVertex(pC, coords, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, colorM, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, colorM, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, color1, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, screenWidth);
-		vBuffer[1] = SVertex(pD, coords, screenWidth);
-		vBuffer[2] = SVertex(pB, coords, screenWidth);
+		vBuffer[0] = SVertex(pC, coords, color1, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, color1,screenWidth);
+		vBuffer[2] = SVertex(pB, coords, colorM, screenWidth);
 			
 		drawTriangle();
 		
@@ -226,15 +233,15 @@ void drawRect(vec3 p0, vec3 p1) {
 		coords = vec3[4](pA, pB, pE, pF);
 		lengths = float[3](length(p0-pM), length(pB-pA), length(pF-pE));
 		
-		vBuffer[0] = SVertex(pA, coords, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, screenWidth);
-		vBuffer[2] = SVertex(pE, coords, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, colorM, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, colorM, screenWidth);
+		vBuffer[2] = SVertex(pE, coords, color0, screenWidth);
 			
 		drawTriangle();
 		
-		vBuffer[0] = SVertex(pE, coords, screenWidth);
-		vBuffer[1] = SVertex(pF, coords, screenWidth);
-		vBuffer[2] = SVertex(pB, coords, screenWidth);
+		vBuffer[0] = SVertex(pE, coords, color0, screenWidth);
+		vBuffer[1] = SVertex(pF, coords, color0, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, colorM, screenWidth);
 			
 		drawTriangle();
 		
@@ -248,15 +255,15 @@ void drawRect(vec3 p0, vec3 p1) {
 		float lengths[3] = float[3](length(diffVec), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
 				
-		vBuffer[0] = SVertex(pA, coords, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, screenWidth);
-		vBuffer[2] = SVertex(pC, coords, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, color0, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, color0, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, color1, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, screenWidth);
-		vBuffer[1] = SVertex(pD, coords, screenWidth);
-		vBuffer[2] = SVertex(pB, coords, screenWidth);
+		vBuffer[0] = SVertex(pC, coords, color1, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, color1, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, color0, screenWidth);
 			
 		drawTriangle();
 	}
@@ -275,8 +282,10 @@ void main()
 	vec2 closest[MAXCONNECTIONS] = {INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT,INIT};
 	
     // get point positions from index
-	vec3 posSource = posFromIndex(idx).xyz;
+	vec3 posSource = dataFromIndex(pointBuffer, idx).xyz;
+    vec3 colSource = dataFromIndex(colBuffer, idx).xyz;
     vec3 posTarget = vec3(0.0);
+    vec3 colTarget = vec3(0.0);
 
 	// for all possible connection
 	for (int i = 0; i < nConnections; i++) {
@@ -290,8 +299,9 @@ void main()
 			break;
 		
 		if (idx < target || !existsEdge(target, idx, nConnections, edgeBlockSize)) {
-            posTarget = posFromIndex(target).xyz;
-			drawRect(posSource, posTarget);
+            posTarget = dataFromIndex(pointBuffer, target).xyz;
+            colTarget = dataFromIndex(colBuffer, target).xyz;
+			drawRect(posSource, posTarget, colSource, colTarget);
         }
 	}
 	

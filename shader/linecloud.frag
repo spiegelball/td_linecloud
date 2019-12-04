@@ -6,6 +6,7 @@ in Vertex
 {
 	vec3 worldSpacePos;
 	vec3 coords[4];
+	vec3 color;
 	float width;
 } iVert;
 
@@ -62,33 +63,10 @@ void main()
 	alpha = smoothstep(0.0,1.0,alpha);
 	
 	float tra = iVert.width / fac;
+		
+	vec4 color = vec4(iVert.color, 1.0);
 	
-	float rad = 0.0;
-	
-	vec4 p0Proj = worldToProjSpace(p0);
-	vec4 p1Proj = worldToProjSpace(p1);
-	float disP0 = length(iVert.worldSpacePos-p0);
-	float disP1 = length(iVert.worldSpacePos-p1);
-	
-	vec4 color = vec4(0.0);
-	
-	alpha *= tra;
-	/*if (disP0 >= a/2.0 && disP1 >= b/2.0) {
-		alpha *= tra;
-		gl_FragDepth = gl_FragCoord.z;
-	}
-	else 
-	{
-		if (disP0 < disP1) {
-			gl_FragDepth = p0Proj.z;
-			color.xyz = vec3(-p0Proj.z/30.0);
-			alpha = 0.2;
-		}
-		else {
-			gl_FragDepth = p1Proj.z;			
-			alpha = 0.2;
-		}
-	}*/ 
+	//alpha *= tra;
 	 
     color.a = alpha;
     
@@ -101,8 +79,8 @@ void main()
     	vec3 sC = vec3(0);
     	vec4 lightPos = uTDLights[i].position;
     	TDLighting(dC, sC, i, camSpacePos, normalize(vec3((lightPos.xyz - camSpacePos).xyz)), 1.0, vec3(1.0,0.0,0.0), viewVec, 1.0 );
-    	color.xyz += dC;
-    	//color.xyz += sC;
+    	color.xyz *= dC;
+    	color.xyz += sC;
     }
     
 	color.xyz *= color.a;

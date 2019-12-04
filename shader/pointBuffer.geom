@@ -1,7 +1,7 @@
 // (c) by Alexander Court / 2019
 // Store vertex info from mesh in pixel buffer. This is done by rendering vertices positions
 // to pixel colors. For every vertex a pixel is rendered where the rgb values correspond
-// to x, y and z position of the vertex.
+// to x, y and z position of the vertex. AAAs
 
 layout (points) in;
 
@@ -9,7 +9,10 @@ layout (points, max_vertices = 1) out;
 
 uniform vec4 uData;
 
-out vec4 vFragColor;
+in vec3 uvCoords[];
+
+out vec4 vEncodedPos;
+out vec3 vCoords;
 
 // map indices to pixels on a square image.
 //   x
@@ -50,7 +53,8 @@ void main()
 	vec4 p = gl_in[0].gl_Position;
 	
     //color pixel according to the vertex' position
-	vFragColor = vec4(p.x, p.y, p.z, 1.0);
+	vEncodedPos = vec4(p.x, p.y, p.z, 1.0);
+	vCoords = uvCoords[0];
     //set position of the rendered pixel in buffer
 	gl_Position = vec4(screenPos.x, screenPos.y,1.0,1.0);
 	
