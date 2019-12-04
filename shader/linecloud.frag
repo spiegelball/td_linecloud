@@ -73,16 +73,22 @@ void main()
     vec3 camSpacePos = (uTDMat.cam * vec4(iVert.worldSpacePos, 1.0)).xyz;
     vec3 viewVec = normalize(uTDMat.camInverse[3].xyz - iVert.worldSpacePos );
 	
-    
+	vec3 diffuse = vec3(0.0);
+	vec3 spec = vec3(0.0);
+	
+	// return parameter
+	vec3 dC = vec3(0.0);
+   	vec3 sC = vec3(0.0);
+	    
     for (int i = 0; i < TD_NUM_LIGHTS; i++) {
-    	vec3 dC = vec3(0);
-    	vec3 sC = vec3(0);
     	vec4 lightPos = uTDLights[i].position;
     	TDLighting(dC, sC, i, camSpacePos, normalize(vec3((lightPos.xyz - camSpacePos).xyz)), 1.0, vec3(1.0,0.0,0.0), viewVec, 1.0 );
-    	color.xyz *= dC;
-    	color.xyz += sC;
+    	diffuse += dC;
+    	spec += sC;
     }
     
+    color.xyz *= diffuse;
+    color.xyz += spec;
 	color.xyz *= color.a;
     
 	TDAlphaTest(color.a);
