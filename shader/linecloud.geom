@@ -179,8 +179,8 @@ float getDOFFac(vec3 p0) {
 //                      focus                                    
 void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 	
-	float focalLength = uWidths.x;
-	float screenWidth = uWidths.y;
+	float focalLength = uWidths.x / 100.;
+	float screenWidth = uWidths.y / 100.;
     
     // calculate orthonormal vector of view and p0->p1 difference vector
 	vec3 widthVec = calcScreenLineOrthonormal(p0, p1);

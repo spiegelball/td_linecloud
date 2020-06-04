@@ -12,7 +12,6 @@ uniform vec4 uData;
 in vec3 uvCoords[];
 
 out vec4 vEncodedPos;
-out vec3 vCoords;
 
 // map indices to pixels on a square image.
 //   x
@@ -54,7 +53,6 @@ void main()
 	
     //color pixel according to the vertex' position
 	vEncodedPos = vec4(p.x, p.y, p.z, 1.0);
-	vCoords = uvCoords[0];
     //set position of the rendered pixel in buffer
 	gl_Position = vec4(screenPos.x, screenPos.y,1.0,1.0);
 	

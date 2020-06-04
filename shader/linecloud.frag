@@ -65,21 +65,19 @@ void main()
 	float tra = iVert.width / fac;
 		
 	vec4 color = vec4(iVert.color, 1.0);
-	
-	//alpha *= tra;
 	 
     color.a = alpha;
     
     vec3 camSpacePos = (uTDMat.cam * vec4(iVert.worldSpacePos, 1.0)).xyz;
     vec3 viewVec = normalize(uTDMat.camInverse[3].xyz - iVert.worldSpacePos );
 	
-	vec3 diffuse = vec3(0.0);
+    // add lightning
+    vec3 diffuse = vec3(0.0);
 	vec3 spec = vec3(0.0);
 	
 	// return parameter
 	vec3 dC = vec3(0.0);
    	vec3 sC = vec3(0.0);
-	    
     for (int i = 0; i < TD_NUM_LIGHTS; i++) {
     	vec4 lightPos = uTDLights[i].position;
     	TDLighting(dC, sC, i, camSpacePos, normalize(vec3((lightPos.xyz - camSpacePos).xyz)), 1.0, vec3(1.0,0.0,0.0), viewVec, 1.0 );
