@@ -9,10 +9,10 @@ layout (points, max_vertices = 1) out;
 
 uniform vec4 uData;
 
-in vec3 uvCoords[];
+in vec3 vColor[];
 
 out vec4 vEncodedPos;
-
+out vec3 gColor;
 // map indices to pixels on a square image.
 //   x
 // y 0  1  2  3  4  5  6  7
@@ -55,6 +55,7 @@ void main()
 	vEncodedPos = vec4(p.x, p.y, p.z, 1.0);
     //set position of the rendered pixel in buffer
 	gl_Position = vec4(screenPos.x, screenPos.y,1.0,1.0);
+    gColor = vColor[0];
 	
     EmitVertex();
 	

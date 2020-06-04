@@ -1,8 +1,8 @@
-out vec3 colorAttr;
+//out vec3 colorAttr;
 
 void main() 
 {	
-	colorAttr = Cd.xyz;
+	//colorAttr = Cd.xyz;
 	gl_Position = vec4(1.0);
 }
 

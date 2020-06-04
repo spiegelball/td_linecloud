@@ -5,7 +5,7 @@
 #define MAXINT 100000
 
 layout (points) in;
-in vec3 colorAttr[];
+//in vec3 colorAttr[];
 
 // emit triangles here
 layout (triangle_strip, max_vertices = 44) out;

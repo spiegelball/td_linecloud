@@ -62,7 +62,6 @@ void main()
 	alpha = clamp(alpha, 0.0,1.0);
 	alpha = smoothstep(0.0,1.0,alpha);
 	
-	float tra = iVert.width / fac;
 		
 	vec4 color = vec4(iVert.color, 1.0);
 	 
@@ -86,7 +85,7 @@ void main()
     }
     
     color.xyz *= diffuse;
-    color.xyz += spec;
+    //color.xyz += spec;
 	color.xyz *= color.a;
     
 	TDAlphaTest(color.a);
