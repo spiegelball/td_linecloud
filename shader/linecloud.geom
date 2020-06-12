@@ -21,6 +21,7 @@ uniform vec3 uFocus;
 
 uniform sampler2D pointBuffer;
 uniform sampler2D colBuffer;
+uniform sampler2D ageLifetimeBuffer;
 uniform sampler2D connectionBuffer;
 
 out Vertex
@@ -28,6 +29,7 @@ out Vertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
 	vec3 color;
+    float fadeOutFac;
 	float width;
 } oVert;
 
@@ -37,6 +39,7 @@ struct SVertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
     vec3 color;
+    float fadeOutFac;
 	float width;
 } vBuffer[3];
 
@@ -128,6 +131,7 @@ void drawTriangle() {
 		oVert.worldSpacePos = vBuffer[i].worldSpacePos;
 		oVert.coords = vBuffer[i].coords;
         oVert.color = vBuffer[i].color;
+        oVert.fadeOutFac = vBuffer[i].fadeOutFac;
 		oVert.width = vBuffer[i].width;
 		gl_Position = worldToProjSpace(vec4(vBuffer[i].worldSpacePos, 1.0));
 		EmitVertex();
@@ -160,6 +164,28 @@ float getDOFFac(vec3 p0) {
 	
 	return clamp(d, 0, l) / l;
 } 
+
+// calculate how close to dying a point is and output fac in range [1..0]
+float calcFadeOutFac(vec2 ageLifetime0, vec2 ageLifetime1) {
+    float fadeOutTime = uData.w;
+    
+    float age0 = ageLifetime0.x;
+    float age1 = ageLifetime1.x;
+    // end = lifetime
+    float end0 = ageLifetime0.y;
+    float end1 = ageLifetime1.y;
+    float start0 = end0-fadeOutTime;
+    float start1 = end1-fadeOutTime;
+    
+    // how much "died" is a point
+    float f0 = clamp((age0 - start0) / (end0 - start0), 0, 1);
+    f0 = 1 - f0;
+    float f1 = clamp((age1 - start1) / (end1 - start1), 0, 1);
+    f1 = 1 - f1;
+    
+    return min(f0, f1);
+}
+
 // Draw rectangle stripe for point p0 and p1. pA-bF are helper points. Only calculate pM, pE and pF if 
 // focus point "cuts" line somewhere between p0 and p1.
 //
@@ -177,7 +203,7 @@ float getDOFFac(vec3 p0) {
 //    pA                                              ------X      
 //                                                         pD      
 //                      focus                                    
-void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
+void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1, vec2 ageLifetime0, vec2 ageLifetime1) {
 	
 	float focalLength = uWidths.x / 100.;
 	float screenWidth = uWidths.y / 100.;
@@ -202,6 +228,9 @@ void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 	vec4 focusCam = uTDMat.cam*vec4(uFocus, 1.0);
 	
 	float fac = (focusCam.z - p0Cam.z) / (p1Cam.z - p0Cam.z);
+    
+    // calculate fading out
+    float fadeOutFac = calcFadeOutFac(ageLifetime0, ageLifetime1);
 	
 	if (0.0 < fac && fac < 1.0) {
 		vec3 pM = mix(p0, p1, fac);
@@ -215,15 +244,15 @@ void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 		float lengths[3] = float[3](length(p1-pM), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
 		
-		vBuffer[0] = SVertex(pA, coords, colorM, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, colorM, screenWidth);
-		vBuffer[2] = SVertex(pC, coords, color1, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, colorM, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, colorM, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, color1, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, color1, screenWidth);
-		vBuffer[1] = SVertex(pD, coords, color1,screenWidth);
-		vBuffer[2] = SVertex(pB, coords, colorM, screenWidth);
+		vBuffer[0] = SVertex(pC, coords, color1, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, color1, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, colorM, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 		
@@ -233,15 +262,15 @@ void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 		coords = vec3[4](pA, pB, pE, pF);
 		lengths = float[3](length(p0-pM), length(pB-pA), length(pF-pE));
 		
-		vBuffer[0] = SVertex(pA, coords, colorM, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, colorM, screenWidth);
-		vBuffer[2] = SVertex(pE, coords, color0, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, colorM, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, colorM, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pE, coords, color0, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 		
-		vBuffer[0] = SVertex(pE, coords, color0, screenWidth);
-		vBuffer[1] = SVertex(pF, coords, color0, screenWidth);
-		vBuffer[2] = SVertex(pB, coords, colorM, screenWidth);
+		vBuffer[0] = SVertex(pE, coords, color0, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pF, coords, color0, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, colorM, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 		
@@ -255,15 +284,15 @@ void drawRect(vec3 p0, vec3 p1, vec3 color0, vec3 color1) {
 		float lengths[3] = float[3](length(diffVec), length(pB-pA), length(pD-pC));
 		coords = vec3[4](pA, pB, pC, pD);
 				
-		vBuffer[0] = SVertex(pA, coords, color0, screenWidth);
-		vBuffer[1] = SVertex(pB, coords, color0, screenWidth);
-		vBuffer[2] = SVertex(pC, coords, color1, screenWidth);
+		vBuffer[0] = SVertex(pA, coords, color0, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pB, coords, color0, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pC, coords, color1, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 			
-		vBuffer[0] = SVertex(pC, coords, color1, screenWidth);
-		vBuffer[1] = SVertex(pD, coords, color1, screenWidth);
-		vBuffer[2] = SVertex(pB, coords, color0, screenWidth);
+		vBuffer[0] = SVertex(pC, coords, color1, fadeOutFac, screenWidth);
+		vBuffer[1] = SVertex(pD, coords, color1, fadeOutFac, screenWidth);
+		vBuffer[2] = SVertex(pB, coords, color0, fadeOutFac, screenWidth);
 			
 		drawTriangle();
 	}
@@ -284,14 +313,16 @@ void main()
     // get point positions from index
 	vec3 posSource = dataFromIndex(pointBuffer, idx).xyz;
     vec3 colSource = dataFromIndex(colBuffer, idx).xyz;
+    vec2 ageLifetimeSource = dataFromIndex(ageLifetimeBuffer, idx).xy;
     vec3 posTarget = vec3(0.0);
     vec3 colTarget = vec3(0.0);
+    vec2 ageLifetimeTarget = vec2(0.0);
 
 	// for all possible connection
 	for (int i = 0; i < nConnections; i++) {
 		int block = int(floor(float(i) / 4.0));
 		int channel = int(mod(i, 4)); 
-		// id of ith neighbour vertex
+		// id of ith "neighbour" vertex
 		int target = idFromIndex(idx*edgeBlockSize+block,channel);
 		
 		// skip if not set
@@ -301,7 +332,8 @@ void main()
 		if (idx < target || !existsEdge(target, idx, nConnections, edgeBlockSize)) {
             posTarget = dataFromIndex(pointBuffer, target).xyz;
             colTarget = dataFromIndex(colBuffer, target).xyz;
-			drawRect(posSource, posTarget, colSource, colTarget);
+            ageLifetimeTarget = dataFromIndex(ageLifetimeBuffer, target).xy;
+			drawRect(posSource, posTarget, colSource, colTarget, ageLifetimeSource, ageLifetimeTarget);
         }
 	}
 	

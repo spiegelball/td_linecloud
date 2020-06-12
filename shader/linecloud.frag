@@ -7,10 +7,15 @@ in Vertex
 	vec3 worldSpacePos;
 	vec3 coords[4];
 	vec3 color;
+	float fadeOutFac;
 	float width;
 } iVert;
 
 out vec4 fragColor;
+
+float gauss(float a, float b, float c, float x) {
+    return 1.;
+}
 
 float distToLine(vec3 p0, vec3 p1, vec3 px)
 {
@@ -65,7 +70,7 @@ void main()
 		
 	vec4 color = vec4(iVert.color, 1.0);
 	 
-    color.a = alpha;
+    color.a = 1.0*iVert.fadeOutFac*alpha; //alpha;
     
     vec3 camSpacePos = (uTDMat.cam * vec4(iVert.worldSpacePos, 1.0)).xyz;
     vec3 viewVec = normalize(uTDMat.camInverse[3].xyz - iVert.worldSpacePos );
@@ -86,7 +91,7 @@ void main()
     
     color.xyz *= diffuse;
     //color.xyz += spec;
-	color.xyz *= color.a;
+	//color.xyz *= color.a;
     
 	TDAlphaTest(color.a);
     TDOutputSwizzle(color);
